@@ -56,8 +56,17 @@ def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, c
         )
         df = df.dropna(how='all')
         
-        # TRUCCO: Taglia via i numeretti (.1, .2) che Pandas aggiunge ai nomi duplicati
-        df.columns = [str(col).split('.')[0] for col in df.columns]
+        # TRUCCO AVANZATO: Taglia via i numeretti (.1, .2) MA aggiunge spazi 
+        # invisibili per ingannare Streamlit ed evitare l'errore dei duplicati.
+        nuove_colonne = []
+        for col in df.columns:
+            nome_pulito = str(col).split('.')[0]
+            # Se il nome esiste già, aggiunge uno spazio invisibile finché non diventa unico
+            while nome_pulito in nuove_colonne:
+                nome_pulito += " "
+            nuove_colonne.append(nome_pulito)
+        
+        df.columns = nuove_colonne
         
         return df
     except Exception as e:
