@@ -66,7 +66,12 @@ with st.sidebar:
     st.title("Menu")
     sezione_scelta = st.radio(
         "Vai a:", 
-        ["🥇 Classifica Generale", "📊 Classifiche Trimestrali", "🗓️ Classifiche di Giornata"]
+        [
+            "🥇 Classifica Generale", 
+            "📊 Classifiche Trimestrali", 
+            "🗓️ Classifiche di Giornata",
+            "🎯 Classifiche risultati esatti e pronostici"
+        ]
     )
 
 # --- INTERFACCIA STREAMLIT ---
@@ -154,9 +159,6 @@ if excel_file is not None:
                 st.dataframe(df_giornata_vuota, hide_index=True, use_container_width=True)
             else:
                 st.info("Classifica non ancora disponibile per questa giornata.")
-
-else:
-    st.error("Errore nel caricamento del file master.")
 
     # ---------------------------------------------
     # 4. RISULTATI ESATTI E PRONOSTICI
