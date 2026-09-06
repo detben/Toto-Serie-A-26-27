@@ -1,4 +1,4 @@
-%%writefile totoserieA2627.py
+%writefile totoserieA2627.py
 import streamlit as st
 import pandas as pd
 import requests
