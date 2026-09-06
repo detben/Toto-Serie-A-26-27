@@ -61,49 +61,12 @@ def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, c
     except Exception as e:
         return None
 
-def colora_classifica(df, tipo):
-    """
-    Applica i colori di sfondo alle prime posizioni in base al tipo di classifica.
-    """
-    # Resettiamo l'indice in modo che il 1° classificato sia sempre 0, il 2° sia 1, ecc.
-    df = df.reset_index(drop=True)
-    
-    if tipo == "generale":
-        # Posizioni da 1 a 6 in sfumature di blu decrescente
-        sfondi = {0: '#08306b', 1: '#08519c', 2: '#2171b5', 3: '#4292c6', 4: '#6baed6', 5: '#9ecae1'}
-        testi = {0: 'white', 1: 'white', 2: 'white', 3: 'white', 4: 'black', 5: 'black'}
-    elif tipo == "giornata":
-        # Posizioni 1, 2 e 3 in sfumature di verde decrescente
-        sfondi = {0: '#00441b', 1: '#238b45', 2: '#74c476'}
-        testi = {0: 'white', 1: 'white', 2: 'black'}
-    elif tipo == "trimestrale":
-        # Posizioni 1 e 2 in sfumature oro/arancione
-        sfondi = {0: '#cc4c02', 1: '#fe9929'}
-        testi = {0: 'white', 1: 'black'}
-    else:
-        sfondi, testi = {}, {}
-
-    def formatta_riga(row):
-        bg = sfondi.get(row.name, '')
-        color = testi.get(row.name, '')
-        if bg:
-            return [f'background-color: {bg}; color: {color}'] * len(row)
-        return [''] * len(row)
-
-    # Applica lo stile riga per riga
-    return df.style.apply(formatta_riga, axis=1)
-
 # --- MENU LATERALE ---
 with st.sidebar:
     st.title("Menu")
     sezione_scelta = st.radio(
         "Vai a:", 
-        [
-            "🥇 Classifica Generale", 
-            "📊 Classifiche Trimestrali", 
-            "🗓️ Classifiche di Giornata",
-            "🎯 Classifiche risultati esatti e pronostici"
-        ]
+        ["🥇 Classifica Generale", "📊 Classifiche Trimestrali", "🗓️ Classifiche di Giornata"]
     )
 
 # --- INTERFACCIA STREAMLIT ---
@@ -122,7 +85,7 @@ if excel_file is not None:
         st.subheader("🥇 Classifica Generale")
         df_generale = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "H:L")
         if df_generale is not None and not df_generale.empty:
-            st.dataframe(colora_classifica(df_generale, "generale"), hide_index=True, use_container_width=True)
+            st.dataframe(df_generale, hide_index=True, use_container_width=True)
         else:
             st.warning("Classifica generale non trovata o formato errato.")
 
@@ -177,7 +140,7 @@ if excel_file is not None:
         )
         
         if df_giornata is not None and not df_giornata.empty:
-            st.dataframe(colora_classifica(df_giornata, "giornata"), hide_index=True, use_container_width=True)
+            st.dataframe(df_giornata, hide_index=True, use_container_width=True)
         else:
             classifica_base = []
             df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
@@ -186,10 +149,14 @@ if excel_file is not None:
                     classifica_base.append({"Posizione": 1, "Partecipanti": nome, "Punti": 0, "Risultati Esatti": 0})
                 
                 df_giornata_vuota = pd.DataFrame(classifica_base).sort_values(["Punti", "Partecipanti"], ascending=[False, True]).reset_index(drop=True)
+                df_giornata_vuota.index += 1
                 
-                st.dataframe(colora_classifica(df_giornata_vuota, "giornata"), hide_index=True, use_container_width=True)
+                st.dataframe(df_giornata_vuota, hide_index=True, use_container_width=True)
             else:
                 st.info("Classifica non ancora disponibile per questa giornata.")
+
+else:
+    st.error("Errore nel caricamento del file master.")
 
     # ---------------------------------------------
     # 4. RISULTATI ESATTI E PRONOSTICI
