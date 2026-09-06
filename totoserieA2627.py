@@ -23,11 +23,9 @@ def converti_link_onedrive(link: str) -> str:
 def scarica_file_excel(link):
     """Scarica l'Excel tentando prima il download diretto, poi l'API di OneDrive."""
     try:
-        # Metodo 1: Aggiunta del parametro download al link corto
         download_url = converti_link_onedrive(link)
         response = requests.get(download_url)
         
-        # Metodo 2 (Fallback): Trucco API Base64 se il Metodo 1 fallisce
         if response.status_code != 200:
             b64 = base64.b64encode(link.encode("utf-8")).decode("utf-8").rstrip("=").replace("/", "_").replace("+", "-")
             api_url = f"https://api.onedrive.com/v1.0/shares/u!{b64}/root/content"
@@ -56,17 +54,8 @@ def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, c
         )
         df = df.dropna(how='all')
         
-        # TRUCCO AVANZATO: Taglia via i numeretti (.1, .2) MA aggiunge spazi 
-        # invisibili per ingannare Streamlit ed evitare l'errore dei duplicati.
-        nuove_colonne = []
-        for col in df.columns:
-            nome_pulito = str(col).split('.')[0]
-            # Se il nome esiste già, aggiunge uno spazio invisibile finché non diventa unico
-            while nome_pulito in nuove_colonne:
-                nome_pulito += " "
-            nuove_colonne.append(nome_pulito)
-        
-        df.columns = nuove_colonne
+        # TRUCCO: Taglia via i numeretti (.1, .2) che Pandas aggiunge ai nomi duplicati
+        df.columns = [str(col).split('.')[0] for col in df.columns]
         
         return df
     except Exception as e:
@@ -77,12 +66,7 @@ with st.sidebar:
     st.title("Menu")
     sezione_scelta = st.radio(
         "Vai a:", 
-        [
-            "🥇 Classifica Generale", 
-            "📊 Classifiche Trimestrali", 
-            "🗓️ Classifiche di Giornata",
-            "📝 Tabelle Pronostici"
-        ]
+        ["🥇 Classifica Generale", "📊 Classifiche Trimestrali", "🗓️ Classifiche di Giornata"]
     )
 
 # --- INTERFACCIA STREAMLIT ---
@@ -156,7 +140,6 @@ if excel_file is not None:
         )
         
         if df_giornata is not None and not df_giornata.empty:
-            df_giornata.columns = ["Posizione", "Partecipanti", "Punti", "Risultati Esatti"]
             st.dataframe(df_giornata, hide_index=True, use_container_width=True)
         else:
             classifica_base = []
@@ -171,39 +154,6 @@ if excel_file is not None:
                 st.dataframe(df_giornata_vuota, hide_index=True, use_container_width=True)
             else:
                 st.info("Classifica non ancora disponibile per questa giornata.")
-
-    # ---------------------------------------------
-    # 4. TABELLE PRONOSTICI
-    # ---------------------------------------------
-    elif sezione_scelta == "📝 Tabelle Pronostici":
-        st.subheader("📝 Tabelle Pronostici")
-        st.write("Scegli la giornata da visualizzare:")
-        
-        lista_giornate = [f"Giornata {i}" for i in range(1, 39)]
-        giornata_scelta = st.selectbox("Seleziona", lista_giornate)
-        
-        numero_giornata = int(giornata_scelta.split()[1])
-        
-        # LOGICA DI SCORRIMENTO ORIZZONTALE:
-        # Colonna B è l'indice 1.
-        # Larghezza tabella 11 colonne + Spazio 4 colonne = Salto di 15 colonne
-        col_partenza_pron = 1 + ((numero_giornata - 1) * 15)
-        
-        # Genera una lista di 11 colonne consecutive a partire da col_partenza_pron
-        colonne_pronostici = [col_partenza_pron + i for i in range(11)]
-        
-        df_pronostici = leggi_sezione_classifica(
-            excel_file, 
-            "Pronostici", 
-            riga_inizio=16,         
-            num_righe=66, # Legge le 66 righe successive (fino alla 82)
-            colonne=colonne_pronostici
-        )
-        
-        if df_pronostici is not None and not df_pronostici.empty:
-            st.dataframe(df_pronostici, hide_index=True, use_container_width=True)
-        else:
-            st.info("Tabella pronostici non ancora disponibile per questa giornata.")
 
 else:
     st.error("Errore nel caricamento del file master.")
