@@ -66,7 +66,12 @@ with st.sidebar:
     st.title("Menu")
     sezione_scelta = st.radio(
         "Vai a:", 
-        ["🥇 Classifica Generale", "📊 Classifiche Trimestrali", "🗓️ Classifiche di Giornata"]
+        [
+            "🥇 Classifica Generale", 
+            "📊 Classifiche Trimestrali", 
+            "🗓️ Classifiche di Giornata",
+            "🎯 Classifiche risultati esatti e pronostici"
+        ]
     )
 
 # --- INTERFACCIA STREAMLIT ---
@@ -155,6 +160,28 @@ if excel_file is not None:
             else:
                 st.info("Classifica non ancora disponibile per questa giornata.")
 
+    # ---------------------------------------------
+    # 4. RISULTATI ESATTI E PRONOSTICI
+    # ---------------------------------------------
+    elif sezione_scelta == "🎯 Classifiche risultati esatti e pronostici":
+        st.subheader("🎯 Classifiche Risultati Esatti e Pronostici (1X2)")
+        st.write("Statistiche aggiornate dei partecipanti.")
+        
+        tab_esatti, tab_segni = st.tabs(["🎯 Risultati Esatti", "✅ Pronostici (1X2)"])
+        
+        with tab_esatti:
+            df_esatti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "S:U")
+            if df_esatti is not None and not df_esatti.empty:
+                st.dataframe(df_esatti, hide_index=True, use_container_width=True)
+            else:
+                st.info("Dati sui risultati esatti non disponibili.")
+                
+        with tab_segni:
+            df_segni = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "Y:AA")
+            if df_segni is not None and not df_segni.empty:
+                st.dataframe(df_segni, hide_index=True, use_container_width=True)
+            else:
+                st.info("Dati sui pronostici non disponibili.")
+
 else:
     st.error("Errore nel caricamento del file master.")
-    
