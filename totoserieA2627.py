@@ -91,7 +91,7 @@ if excel_file is not None:
         st.subheader("🥇 Classifica Generale")
         df_generale = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "H:L")
         if df_generale is not None and not df_generale.empty:
-            st.dataframe(df_generale, hide_index=True, use_container_width=True)
+            st.dataframe(df_generale, hide_index=True, use_container_width=True, height=700)
         else:
             st.warning("Classifica generale non trovata o formato errato.")
 
@@ -105,21 +105,21 @@ if excel_file is not None:
         with tab1:
             df_trim1 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "H:L")
             if df_trim1 is not None and not df_trim1.empty:
-                st.dataframe(df_trim1, hide_index=True, use_container_width=True)
+                st.dataframe(df_trim1, hide_index=True, use_container_width=True, height=700)
             else:
                 st.info("Dati non disponibili")
                 
         with tab2:
             df_trim2 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "X:AB")
             if df_trim2 is not None and not df_trim2.empty:
-                st.dataframe(df_trim2, hide_index=True, use_container_width=True)
+                st.dataframe(df_trim2, hide_index=True, use_container_width=True, height=700)
             else:
                 st.info("Dati non disponibili")
 
         with tab3:
             df_trim3 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "AN:AR")
             if df_trim3 is not None and not df_trim3.empty:
-                st.dataframe(df_trim3, hide_index=True, use_container_width=True)
+                st.dataframe(df_trim3, hide_index=True, use_container_width=True, height=700)
             else:
                 st.info("Dati non disponibili")
 
@@ -155,7 +155,7 @@ if excel_file is not None:
         )
         
         if df_giornata is not None and not df_giornata.empty:
-            st.dataframe(df_giornata, hide_index=True, use_container_width=True)
+            st.dataframe(df_giornata, hide_index=True, use_container_width=True, height=700)
         else:
             classifica_base = []
             df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
@@ -182,14 +182,14 @@ if excel_file is not None:
         with tab_esatti:
             df_esatti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "S:U")
             if df_esatti is not None and not df_esatti.empty:
-                st.dataframe(df_esatti, hide_index=True, use_container_width=True)
+                st.dataframe(df_esatti, hide_index=True, use_container_width=True, height=700)
             else:
                 st.info("Dati sui risultati esatti non disponibili.")
                 
         with tab_segni:
             df_segni = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "Y:AA")
             if df_segni is not None and not df_segni.empty:
-                st.dataframe(df_segni, hide_index=True, use_container_width=True)
+                st.dataframe(df_segni, hide_index=True, use_container_width=True, height=700)
             else:
                 st.info("Dati sui pronostici non disponibili.")
 
