@@ -89,6 +89,10 @@ if excel_file is not None:
     # ---------------------------------------------
     if sezione_scelta == "🥇 Classifica Generale":
         st.subheader("🥇 Classifica Generale")
+        
+        # Questa è la riga che era saltata
+        df_generale = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "H:L")
+        
         if df_generale is not None and not df_generale.empty:
             # Stringe la colonna accorciando il nome
             df_generale = df_generale.rename(columns=lambda x: "Ris. esatti" if "esatti" in str(x).lower() else x)
