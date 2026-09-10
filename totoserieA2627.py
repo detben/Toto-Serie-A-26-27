@@ -6,6 +6,7 @@ import base64
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layout="centered")
+GIORNATA_CORRENTE = 4
 
 # ==========================================
 # INCOLLA QUI IL LINK PRESO DA "CONDIVIDI"
@@ -130,7 +131,16 @@ if excel_file is not None:
         st.write("Scegli la giornata da visualizzare:")
         
         lista_giornate = [f"Giornata {i}" for i in range(3, 39)]
-        giornata_scelta = st.selectbox("Seleziona", lista_giornate)
+        
+        # Calcola la posizione nella lista (Giornata 1 corrisponde all'indice 0)
+        indice_default = GIORNATA_CORRENTE - 1
+        
+        giornata_scelta = st.selectbox(
+            "Seleziona", 
+            lista_giornate,
+            index=indice_default,
+            key="memoria_giornata_classifiche" # Salva la scelta dell'utente durante la sessione
+        )
         
         numero_giornata = int(giornata_scelta.split()[1])
         colonna_partenza = 2 + ((numero_giornata - 1) * 15)
