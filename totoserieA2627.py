@@ -95,7 +95,7 @@ if excel_file is not None:
         
         if df_generale is not None and not df_generale.empty:
             # Stringe la colonna accorciando il nome
-            df_generale = df_generale.rename(columns=lambda x: "Ris. esatti" if "esatti" in str(x).lower() else x)
+            df_generale = df_generale.rename(columns=lambda x: "RIS. ESATTI" if "esatti" in str(x).lower() else x)
             
             st.dataframe(
                 df_generale, 
@@ -116,7 +116,7 @@ if excel_file is not None:
         with tab1:
             df_trim1 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "H:L")
             if df_trim1 is not None and not df_trim1.empty:
-                df_trim1 = df_trim1.rename(columns=lambda x: "Ris. esatti" if "esatti" in str(x).lower() else x)
+                df_trim1 = df_trim1.rename(columns=lambda x: "RIS. ESATTI" if "esatti" in str(x).lower() else x)
                 st.dataframe(df_trim1, hide_index=True, use_container_width=True, height=2330)
             else:
                 st.info("Dati non disponibili")
@@ -124,7 +124,7 @@ if excel_file is not None:
         with tab2:
             df_trim2 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "X:AB")
             if df_trim2 is not None and not df_trim2.empty:
-                df_trim2 = df_trim2.rename(columns=lambda x: "Ris. esatti" if "esatti" in str(x).lower() else x)
+                df_trim2 = df_trim2.rename(columns=lambda x: "RIS. ESATTI" if "esatti" in str(x).lower() else x)
                 st.dataframe(df_trim2, hide_index=True, use_container_width=True, height=2330)
             else:
                 st.info("Dati non disponibili")
@@ -132,7 +132,7 @@ if excel_file is not None:
         with tab3:
             df_trim3 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "AN:AR")
             if df_trim3 is not None and not df_trim3.empty:
-                df_trim3 = df_trim3.rename(columns=lambda x: "Ris. esatti" if "esatti" in str(x).lower() else x)
+                df_trim3 = df_trim3.rename(columns=lambda x: "RIS. ESATTI" if "esatti" in str(x).lower() else x)
                 st.dataframe(df_trim3, hide_index=True, use_container_width=True, height=2330)
             else:
                 st.info("Dati non disponibili")
