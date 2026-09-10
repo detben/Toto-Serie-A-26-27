@@ -140,7 +140,7 @@ if excel_file is not None:
             excel_file, 
             "Classifiche giornata", 
             riga_inizio=6,         
-            num_righe=66,          
+            num_righe=65,          
             colonne=colonne_giornata
         )
         
