@@ -94,7 +94,7 @@ if excel_file is not None:
             df_generale = df_generale.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris.esatti"})
             
             st.dataframe(
-                colora_classifica(df_generale, "generale"), 
+                df_generale, 
                 hide_index=True, 
                 use_container_width=True,
                 height=2300
@@ -113,7 +113,7 @@ if excel_file is not None:
             df_trim1 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "H:L")
             if df_trim1 is not None and not df_trim1.empty:
                 df_trim1 = df_trim1.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
-                st.dataframe(colora_classifica(df_trim1, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
+                st.dataframe(df_trim1, hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
                 
@@ -121,7 +121,7 @@ if excel_file is not None:
             df_trim2 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "X:AB")
             if df_trim2 is not None and not df_trim2.empty:
                 df_trim2 = df_trim2.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
-                st.dataframe(colora_classifica(df_trim2, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
+                st.dataframe(df_trim2, hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
 
@@ -129,7 +129,7 @@ if excel_file is not None:
             df_trim3 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "AN:AR")
             if df_trim3 is not None and not df_trim3.empty:
                 df_trim3 = df_trim3.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
-                st.dataframe(colora_classifica(df_trim3, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
+                st.dataframe(df_trim3, hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
 
