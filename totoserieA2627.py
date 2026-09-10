@@ -67,9 +67,9 @@ with st.sidebar:
     sezione_scelta = st.radio(
         "Vai a:", 
         [
-            "🥇 Classifica Generale", 
+            "🗓️ Classifiche di Giornata", 
             "📊 Classifiche Trimestrali", 
-            "🗓️ Classifiche di Giornata",
+            "🥇 Classifica Generale",
             "🎯 Classifiche risultati esatti e pronostici"
         ]
     )
