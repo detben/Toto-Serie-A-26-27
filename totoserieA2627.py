@@ -133,7 +133,7 @@ if excel_file is not None:
         lista_giornate = [f"Giornata {i}" for i in range(3, 39)]
         
         # Calcola la posizione nella lista (Giornata 1 corrisponde all'indice 0)
-        indice_default = GIORNATA_CORRENTE - 1
+        indice_default = GIORNATA_CORRENTE - 3
         
         giornata_scelta = st.selectbox(
             "Seleziona", 
