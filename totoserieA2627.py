@@ -129,7 +129,7 @@ if excel_file is not None:
         st.subheader("🗓️ Classifiche di Giornata")
         st.write("Scegli la giornata da visualizzare:")
         
-        lista_giornate = [f"Giornata {i}" for i in range(1, 39)]
+        lista_giornate = [f"Giornata {i}" for i in range(3, 39)]
         giornata_scelta = st.selectbox("Seleziona", lista_giornate)
         
         numero_giornata = int(giornata_scelta.split()[1])
