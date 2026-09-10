@@ -89,9 +89,16 @@ if excel_file is not None:
     # ---------------------------------------------
     if sezione_scelta == "🥇 Classifica Generale":
         st.subheader("🥇 Classifica Generale")
-        df_generale = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "H:L")
         if df_generale is not None and not df_generale.empty:
-            st.dataframe(df_generale, hide_index=True, use_container_width=True, height=2350)
+            # Stringe la colonna accorciando il nome
+            df_generale = df_generale.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris.esatti"})
+            
+            st.dataframe(
+                colora_classifica(df_generale, "generale"), 
+                hide_index=True, 
+                use_container_width=True,
+                height=2300
+            )
         else:
             st.warning("Classifica generale non trovata o formato errato.")
 
@@ -105,21 +112,24 @@ if excel_file is not None:
         with tab1:
             df_trim1 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "H:L")
             if df_trim1 is not None and not df_trim1.empty:
-                st.dataframe(df_trim1, hide_index=True, use_container_width=True, height=2350)
+                df_trim1 = df_trim1.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
+                st.dataframe(colora_classifica(df_trim1, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
                 
         with tab2:
             df_trim2 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "X:AB")
             if df_trim2 is not None and not df_trim2.empty:
-                st.dataframe(df_trim2, hide_index=True, use_container_width=True, height=2350)
+                df_trim2 = df_trim2.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
+                st.dataframe(colora_classifica(df_trim2, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
 
         with tab3:
             df_trim3 = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 65, "AN:AR")
             if df_trim3 is not None and not df_trim3.empty:
-                st.dataframe(df_trim3, hide_index=True, use_container_width=True, height=2350)
+                df_trim3 = df_trim3.rename(columns={"Risultati esatti": "Ris. esatti", "Risultati Esatti": "Ris. esatti"})
+                st.dataframe(colora_classifica(df_trim3, "trimestrale"), hide_index=True, use_container_width=True, height=2300)
             else:
                 st.info("Dati non disponibili")
 
