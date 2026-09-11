@@ -194,14 +194,14 @@ if excel_file is not None:
         tab_esatti, tab_segni = st.tabs(["🎯 Risultati Esatti", "✅ Pronostici (1X2)"])
         
         with tab_esatti:
-            df_esatti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "S:U")
+            df_esatti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "S:U")
             if df_esatti is not None and not df_esatti.empty:
                 st.dataframe(df_esatti, hide_index=True, use_container_width=True, height=2330)
             else:
                 st.info("Dati sui risultati esatti non disponibili.")
                 
         with tab_segni:
-            df_segni = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "Y:AA")
+            df_segni = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "Y:AA")
             if df_segni is not None and not df_segni.empty:
                 st.dataframe(df_segni, hide_index=True, use_container_width=True, height=2330)
             else:
