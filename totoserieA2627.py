@@ -101,7 +101,7 @@ if excel_file is not None:
                 df_generale, 
                 hide_index=True, 
                 use_container_width=True,
-                height=2300
+                height=2325
             )
         else:
             st.warning("Classifica generale non trovata o formato errato.")
