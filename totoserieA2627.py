@@ -6,7 +6,7 @@ import base64
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layout="centered")
-GIORNATA_CORRENTE = 4
+GIORNATA_CORRENTE = 5
 
 # ==========================================
 # 1. LINK ONEDRIVE (Per le Classifiche)
