@@ -272,6 +272,3 @@ if excel_file is not None:
 
 else:
     st.error("Errore nel caricamento del file master Excel.")
-
-else:
-    st.error("Errore nel caricamento del file master Excel.")
