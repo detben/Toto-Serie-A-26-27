@@ -9,9 +9,14 @@ st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layo
 GIORNATA_CORRENTE = 4
 
 # ==========================================
-# INCOLLA QUI IL LINK PRESO DA "CONDIVIDI"
+# 1. LINK ONEDRIVE (Per le Classifiche)
 # ==========================================
 ONEDRIVE_LINK = "https://1drv.ms/x/c/37257a5e51e01cb8/IQBsF-NEdoduQI8-Jzl1AwRXAQvVKRsPJTBNjnoapoL8BNY?e=Blub1N"
+
+# ==========================================
+# 2. LINK GOOGLE SHEETS (Per i Pronostici)
+# ==========================================
+GOOGLE_LINK = "https://docs.google.com/spreadsheets/d/1Qzd-5U0ixS5dnwEXaTovX8XpVLoentoS1cfZL3Hg8p0/edit?usp=sharing"
 
 def converti_link_onedrive(link: str) -> str:
     """Forza il parametro di download sul link fornito."""
@@ -22,7 +27,7 @@ def converti_link_onedrive(link: str) -> str:
 
 @st.cache_data(ttl=60)
 def scarica_file_excel(link):
-    """Scarica l'Excel tentando prima il download diretto, poi l'API di OneDrive."""
+    """Scarica l'Excel da OneDrive."""
     try:
         download_url = converti_link_onedrive(link)
         response = requests.get(download_url)
@@ -35,17 +40,36 @@ def scarica_file_excel(link):
         if response.status_code == 200:
             return io.BytesIO(response.content)
         else:
-            st.error(f"Accesso negato da OneDrive (Errore {response.status_code}). Assicurati che le impostazioni del link siano su 'Chiunque abbia il collegamento'.")
+            st.error(f"Accesso negato da OneDrive (Errore {response.status_code}).")
             return None
     except Exception as e:
-        st.error(f"Errore di connessione: {e}")
+        st.error(f"Errore di connessione OneDrive: {e}")
+        return None
+
+@st.cache_data(ttl=60)
+def scarica_file_google(link):
+    """Scarica il file da Google Sheets convertendolo al volo in Excel."""
+    try:
+        if "/edit" in link:
+            download_url = link.split("/edit")[0] + "/export?format=xlsx"
+        else:
+            download_url = link
+            
+        response = requests.get(download_url)
+        
+        if response.status_code == 200:
+            return io.BytesIO(response.content)
+        else:
+            st.error(f"Accesso negato a Google Sheets (Errore {response.status_code}). Assicurati che sia su 'Chiunque abbia il link'.")
+            return None
+    except Exception as e:
+        st.error(f"Errore di connessione a Google Sheets: {e}")
         return None
 
 def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, colonne):
-    """
-    Legge un pezzo specifico di un foglio Excel e ne pulisce le intestazioni.
-    """
+    """Legge un pezzo specifico di un foglio Excel e ne pulisce le intestazioni."""
     try:
+        excel_bytes.seek(0) # Riporta il cursore a zero
         df = pd.read_excel(
             excel_bytes, 
             sheet_name=nome_foglio,
@@ -54,10 +78,7 @@ def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, c
             usecols=colonne
         )
         df = df.dropna(how='all')
-        
-        # TRUCCO: Taglia via i numeretti (.1, .2) che Pandas aggiunge ai nomi duplicati
-        df.columns = [str(col).split('.')[0] for col in df.columns]
-        
+        df.columns = [str(col).split('.')[0].strip() for col in df.columns]
         return df
     except Exception as e:
         return None
@@ -71,7 +92,8 @@ with st.sidebar:
             "🗓️ Classifiche di Giornata", 
             "📊 Classifiche Trimestrali", 
             "🥇 Classifica Generale",
-            "🎯 Classifiche risultati esatti e pronostici"
+            "🎯 Classifiche risultati esatti e pronostici",
+            "📝 Tabelle Pronostici"
         ]
     )
 
@@ -80,34 +102,28 @@ st.title("🏆 Classifiche Toto Amici")
 st.write("Dati aggiornati in tempo reale")
 st.divider()
 
+# Scarica entrambi i file in background
 excel_file = scarica_file_excel(ONEDRIVE_LINK)
+google_file = scarica_file_google(GOOGLE_LINK)
 
 if excel_file is not None:
     
     # ---------------------------------------------
-    # 1. CLASSIFICA GENERALE
+    # 1. CLASSIFICA GENERALE (Da OneDrive)
     # ---------------------------------------------
     if sezione_scelta == "🥇 Classifica Generale":
         st.subheader("🥇 Classifica Generale")
         
-        # Questa è la riga che era saltata
         df_generale = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "H:L")
         
         if df_generale is not None and not df_generale.empty:
-            # Stringe la colonna accorciando il nome
             df_generale = df_generale.rename(columns=lambda x: "RIS. ESATTI" if "esatti" in str(x).lower() else x)
-            
-            st.dataframe(
-                df_generale, 
-                hide_index=True, 
-                use_container_width=True,
-                height=2325
-            )
+            st.dataframe(df_generale, hide_index=True, use_container_width=True, height=2325)
         else:
             st.warning("Classifica generale non trovata o formato errato.")
 
     # ---------------------------------------------
-    # 2. CLASSIFICHE TRIMESTRALI
+    # 2. CLASSIFICHE TRIMESTRALI (Da OneDrive)
     # ---------------------------------------------
     elif sezione_scelta == "📊 Classifiche Trimestrali":
         st.subheader("📊 Classifiche Trimestrali")
@@ -138,35 +154,22 @@ if excel_file is not None:
                 st.info("Dati non disponibili")
 
     # ---------------------------------------------
-    # 3. CLASSIFICHE DI GIORNATA (Orizzontali)
+    # 3. CLASSIFICHE DI GIORNATA (Da OneDrive)
     # ---------------------------------------------
     elif sezione_scelta == "🗓️ Classifiche di Giornata":
         st.subheader("🗓️ Classifiche di Giornata")
         st.write("Scegli la giornata da visualizzare:")
         
         lista_giornate = [f"Giornata {i}" for i in range(3, 39)]
+        indice_default = GIORNATA_CORRENTE - 3 if GIORNATA_CORRENTE >= 3 else 0
         
-        # Calcola la posizione nella lista (Giornata 1 corrisponde all'indice 0)
-        indice_default = GIORNATA_CORRENTE - 3
-        
-        giornata_scelta = st.selectbox(
-            "Seleziona", 
-            lista_giornate,
-            index=indice_default,
-            key="memoria_giornata_classifiche" # Salva la scelta dell'utente durante la sessione
-        )
+        giornata_scelta = st.selectbox("Seleziona", lista_giornate, index=indice_default, key="memoria_giornata_classifiche")
         
         numero_giornata = int(giornata_scelta.split()[1])
         colonna_partenza = 2 + ((numero_giornata - 1) * 15)
         colonne_giornata = [colonna_partenza, colonna_partenza + 1, colonna_partenza + 2, colonna_partenza + 3]
         
-        df_giornata = leggi_sezione_classifica(
-            excel_file, 
-            "Classifiche giornata", 
-            riga_inizio=6,         
-            num_righe=65,          
-            colonne=colonne_giornata
-        )
+        df_giornata = leggi_sezione_classifica(excel_file, "Classifiche giornata", 6, 65, colonne_giornata)
         
         if df_giornata is not None and not df_giornata.empty:
             st.dataframe(df_giornata, hide_index=True, use_container_width=True, height=2330)
@@ -179,17 +182,15 @@ if excel_file is not None:
                 
                 df_giornata_vuota = pd.DataFrame(classifica_base).sort_values(["Punti", "Partecipanti"], ascending=[False, True]).reset_index(drop=True)
                 df_giornata_vuota.index += 1
-                
                 st.dataframe(df_giornata_vuota, hide_index=True, use_container_width=True)
             else:
                 st.info("Classifica non ancora disponibile per questa giornata.")
 
     # ---------------------------------------------
-    # 4. RISULTATI ESATTI E PRONOSTICI
+    # 4. RISULTATI ESATTI E PRONOSTICI (Da OneDrive)
     # ---------------------------------------------
     elif sezione_scelta == "🎯 Classifiche risultati esatti e pronostici":
         st.subheader("🎯 Classifiche Risultati Esatti e Pronostici (1X2)")
-        st.write("Statistiche aggiornate dei partecipanti.")
         
         tab_esatti, tab_segni = st.tabs(["🎯 Risultati Esatti", "✅ Pronostici (1X2)"])
         
@@ -207,5 +208,62 @@ if excel_file is not None:
             else:
                 st.info("Dati sui pronostici non disponibili.")
 
+    # ---------------------------------------------
+    # 5. TABELLE PRONOSTICI (DA GOOGLE SHEETS)
+    # ---------------------------------------------
+    elif sezione_scelta == "📝 Tabelle Pronostici":
+        st.subheader("📝 Tabelle Pronostici Inseriti")
+        st.write("Scegli la giornata da controllare:")
+        
+        lista_giornate_pronostici = [f"Giornata {i}" for i in range(3, 39)]
+        indice_default_pronostici = GIORNATA_CORRENTE - 3 if GIORNATA_CORRENTE >= 3 else 0
+        
+        giornata_scelta_pronostico = st.selectbox("Seleziona Giornata", lista_giornate_pronostici, index=indice_default_pronostici, key="memoria_giornata_pronostici")
+        
+        # ORA CERCHIAMO I DATI NEL FILE GOOGLE, NON IN QUELLO ONEDRIVE
+        if google_file is not None:
+            nome_foglio_pronostici = giornata_scelta_pronostico
+            try:
+                google_file.seek(0)
+                df_pron = pd.read_excel(google_file, sheet_name=nome_foglio_pronostici)
+                foglio_esiste = True
+            except ValueError:
+                foglio_esiste = False
+                
+            if foglio_esiste and not df_pron.empty:
+                df_pron = df_pron.dropna(how='all').dropna(how='all', axis=1)
+                df_pron.columns = [str(c).split('.')[0].strip() for c in df_pron.columns]
+                
+                if len(df_pron.columns) >= 3:
+                    col_partecipante = df_pron.columns[1]
+                    col_jolly = df_pron.columns[-1]
+                    
+                    df_pron = df_pron.drop_duplicates(subset=[col_partecipante], keep='last')
+                    df_pron = df_pron.sort_values(by=col_partecipante).reset_index(drop=True)
+                    
+                    mappa_jolly = dict(zip(df_pron[col_partecipante], df_pron[col_jolly]))
+                    
+                    # Esclude Timestamp (col 0) e Jolly (ultima colonna)
+                    colonne_da_mostrare = list(df_pron.columns)[1:-1]
+                    df_vista = df_pron[colonne_da_mostrare].copy()
+                    
+                    def colora_partita_jolly(row):
+                        styles = [''] * len(row)
+                        partecipante_attuale = row[col_partecipante]
+                        partita_scelta = str(mappa_jolly.get(partecipante_attuale, "")).strip().lower()
+                        
+                        for i, col in enumerate(row.index):
+                            if str(col).strip().lower() == partita_scelta:
+                                styles[i] = 'background-color: #ff4b4b; color: white; font-weight: bold;'
+                        return styles
+                    
+                    st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
+                else:
+                    st.warning("Il foglio non è nel formato previsto.")
+            else:
+                st.info("Il tabellone relativo a questa giornata non è ancora disponibile.")
+        else:
+            st.error("Impossibile caricare i dati dei pronostici da Google Sheets.")
+
 else:
-    st.error("Errore nel caricamento del file master.")
+    st.error("Errore nel caricamento del file master Excel.")
