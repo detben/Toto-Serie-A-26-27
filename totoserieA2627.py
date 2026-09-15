@@ -208,7 +208,7 @@ if excel_file is not None:
             else:
                 st.info("Dati sui pronostici non disponibili.")
 
-    # ---------------------------------------------
+   # ---------------------------------------------
     # 5. TABELLE PRONOSTICI (DA GOOGLE SHEETS)
     # ---------------------------------------------
     elif sezione_scelta == "📝 Tabelle Pronostici":
@@ -220,7 +220,7 @@ if excel_file is not None:
         
         giornata_scelta_pronostico = st.selectbox("Seleziona Giornata", lista_giornate_pronostici, index=indice_default_pronostici, key="memoria_giornata_pronostici")
         
-        # ORA CERCHIAMO I DATI NEL FILE GOOGLE, NON IN QUELLO ONEDRIVE
+        # Cerca i dati nel file Google
         if google_file is not None:
             nome_foglio_pronostici = giornata_scelta_pronostico
             try:
@@ -232,7 +232,12 @@ if excel_file is not None:
                 
             if foglio_esiste and not df_pron.empty:
                 df_pron = df_pron.dropna(how='all').dropna(how='all', axis=1)
+                
+                # 1. Pulisce i nomi delle colonne rimuovendo eventuali ".1" 
                 df_pron.columns = [str(c).split('.')[0].strip() for c in df_pron.columns]
+                
+                # 2. ACCORCIA L'INTESTAZIONE LUNGA DELLA COLONNA
+                df_pron = df_pron.rename(columns=lambda x: "Elenco partecipanti" if "selezionare il proprio nome" in str(x).lower() else x)
                 
                 if len(df_pron.columns) >= 3:
                     col_partecipante = df_pron.columns[1]
@@ -264,6 +269,9 @@ if excel_file is not None:
                 st.info("Il tabellone relativo a questa giornata non è ancora disponibile.")
         else:
             st.error("Impossibile caricare i dati dei pronostici da Google Sheets.")
+
+else:
+    st.error("Errore nel caricamento del file master Excel.")
 
 else:
     st.error("Errore nel caricamento del file master Excel.")
