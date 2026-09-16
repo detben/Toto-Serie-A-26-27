@@ -6,7 +6,7 @@ import base64
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layout="centered")
-GIORNATA_CORRENTE = 5
+GIORNATA_CORRENTE = 4
 
 # ==========================================
 # 1. LINK ONEDRIVE (Per le Classifiche)
@@ -16,7 +16,7 @@ ONEDRIVE_LINK = "https://1drv.ms/x/c/37257a5e51e01cb8/IQBsF-NEdoduQI8-Jzl1AwRXAQ
 # ==========================================
 # 2. LINK GOOGLE SHEETS (Per i Pronostici)
 # ==========================================
-GOOGLE_LINK = "https://docs.google.com/spreadsheets/d/1Qzd-5U0ixS5dnwEXaTovX8XpVLoentoS1cfZL3Hg8p0/edit?usp=sharing"
+GOOGLE_LINK = "INCOLLA_QUI_IL_LINK_DI_GOOGLE_SHEETS"
 
 def converti_link_onedrive(link: str) -> str:
     """Forza il parametro di download sul link fornito."""
