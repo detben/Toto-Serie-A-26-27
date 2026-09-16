@@ -6,7 +6,7 @@ import base64
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layout="centered")
-GIORNATA_CORRENTE = 4
+GIORNATA_CORRENTE = 5
 
 # ==========================================
 # 1. LINK ONEDRIVE (Per le Classifiche)
@@ -270,7 +270,7 @@ if excel_file is not None:
                     st.subheader("🚨 Stato Invii")
                     
                     # 1. Recupera la lista ufficiale dall'Excel
-                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
+                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "I:I") 
                     
                     if df_partecipanti is not None and not df_partecipanti.empty:
                         # 2. Crea i due elenchi pulendo eventuali spazi vuoti accidentali
