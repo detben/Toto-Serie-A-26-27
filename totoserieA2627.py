@@ -208,7 +208,7 @@ if excel_file is not None:
             else:
                 st.info("Dati sui pronostici non disponibili.")
 
-   # ---------------------------------------------
+# ---------------------------------------------
     # 5. TABELLE PRONOSTICI (DA GOOGLE SHEETS)
     # ---------------------------------------------
     elif sezione_scelta == "📝 Tabelle Pronostici":
@@ -233,10 +233,10 @@ if excel_file is not None:
             if foglio_esiste and not df_pron.empty:
                 df_pron = df_pron.dropna(how='all').dropna(how='all', axis=1)
                 
-                # 1. Pulisce i nomi delle colonne rimuovendo eventuali ".1" 
+                # Pulisce i nomi delle colonne
                 df_pron.columns = [str(c).split('.')[0].strip() for c in df_pron.columns]
                 
-                # 2. ACCORCIA L'INTESTAZIONE LUNGA DELLA COLONNA
+                # Accorcia l'intestazione lunga
                 df_pron = df_pron.rename(columns=lambda x: "Elenco partecipanti" if "selezionare il proprio nome" in str(x).lower() else x)
                 
                 if len(df_pron.columns) >= 3:
@@ -248,7 +248,6 @@ if excel_file is not None:
                     
                     mappa_jolly = dict(zip(df_pron[col_partecipante], df_pron[col_jolly]))
                     
-                    # Esclude Timestamp (col 0) e Jolly (ultima colonna)
                     colonne_da_mostrare = list(df_pron.columns)[1:-1]
                     df_vista = df_pron[colonne_da_mostrare].copy()
                     
@@ -263,6 +262,32 @@ if excel_file is not None:
                         return styles
                     
                     st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
+                    
+                    # ==========================================
+                    # NUOVA SEZIONE: CONTROLLO PARTECIPANTI MANCANTI
+                    # ==========================================
+                    st.divider()
+                    st.subheader("🚨 Stato Invii")
+                    
+                    # 1. Recupera la lista ufficiale dall'Excel
+                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
+                    
+                    if df_partecipanti is not None and not df_partecipanti.empty:
+                        # 2. Crea i due elenchi pulendo eventuali spazi vuoti accidentali
+                        tutti_i_nomi = set(df_partecipanti.iloc[:, 0].dropna().astype(str).str.strip())
+                        nomi_inviati = set(df_pron[col_partecipante].dropna().astype(str).str.strip())
+                        
+                        # 3. Calcola chi manca e mette in ordine alfabetico
+                        mancanti = sorted(list(tutti_i_nomi - nomi_inviati))
+                        
+                        if mancanti:
+                            testo_mancanti = "\n".join([f"* {nome}" for nome in mancanti])
+                            st.warning(f"All'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
+                        else:
+                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! 🎉")
+                    else:
+                        st.info("Impossibile caricare l'elenco ufficiale dall'Excel per verificare i mancanti.")
+                        
                 else:
                     st.warning("Il foglio non è nel formato previsto.")
             else:
