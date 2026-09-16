@@ -98,7 +98,7 @@ with st.sidebar:
     )
 
 # --- INTERFACCIA STREAMLIT ---
-st.title("🏆 Classifiche Toto Amici")
+st.title("🏆 Toto Serie A 2026/27")
 st.write("Dati aggiornati in tempo reale")
 st.divider()
 
