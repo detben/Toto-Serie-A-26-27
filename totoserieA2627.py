@@ -5,7 +5,7 @@ import io
 import base64
 
 # --- CONFIGURAZIONE ---
-st.set_page_config(page_title="Toto Amici - Serie A 2026/27", page_icon="🏆", layout="centered")
+st.set_page_config(page_title="Toto Amici - Classifiche", page_icon="🏆", layout="centered")
 GIORNATA_CORRENTE = 5
 
 # ==========================================
