@@ -278,7 +278,7 @@ if excel_file is not None:
                             st.warning(f"🔒 **Tabellone bloccato.** Le giocate saranno visibili solo quando tutti avranno inviato la colonna.\n\nAll'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
                         else:
                             # Se non manca nessuno, mostra successo e sblocca la tabella
-                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! 🎉")
+                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata!")
                             st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                     else:
                         # Sistema di sicurezza: se per caso l'Excel ha problemi, mostra la tabella per non rompere l'app
