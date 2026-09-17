@@ -264,7 +264,7 @@ if excel_file is not None:
                     # ==========================================
                     # CONTROLLO MANCANTI E BLOCCO VISUALE TABELLA
                     # ==========================================
-                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
+                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "I:I") 
                     
                     if df_partecipanti is not None and not df_partecipanti.empty:
                         tutti_i_nomi = set(df_partecipanti.iloc[:, 0].dropna().astype(str).str.strip())
