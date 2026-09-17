@@ -261,32 +261,29 @@ if excel_file is not None:
                                 styles[i] = 'background-color: #ff4b4b; color: white; font-weight: bold;'
                         return styles
                     
-                    st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
-                    
                     # ==========================================
-                    # NUOVA SEZIONE: CONTROLLO PARTECIPANTI MANCANTI
+                    # CONTROLLO MANCANTI E BLOCCO VISUALE TABELLA
                     # ==========================================
-                    st.divider()
-                    st.subheader("🚨 Stato Invii")
-                    
-                    # 1. Recupera la lista ufficiale dall'Excel
-                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "I:I") 
+                    df_partecipanti = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 66, "I:I") 
                     
                     if df_partecipanti is not None and not df_partecipanti.empty:
-                        # 2. Crea i due elenchi pulendo eventuali spazi vuoti accidentali
                         tutti_i_nomi = set(df_partecipanti.iloc[:, 0].dropna().astype(str).str.strip())
                         nomi_inviati = set(df_pron[col_partecipante].dropna().astype(str).str.strip())
                         
-                        # 3. Calcola chi manca e mette in ordine alfabetico
                         mancanti = sorted(list(tutti_i_nomi - nomi_inviati))
                         
                         if mancanti:
+                            # Se manca qualcuno, blocca la tabella e mostra il warning
                             testo_mancanti = "\n".join([f"* {nome}" for nome in mancanti])
-                            st.warning(f"All'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
+                            st.warning(f"🔒 **Tabellone bloccato.** Le giocate saranno visibili solo quando tutti avranno inviato la colonna.\n\nAll'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
                         else:
+                            # Se non manca nessuno, mostra successo e sblocca la tabella
                             st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! 🎉")
+                            st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                     else:
+                        # Sistema di sicurezza: se per caso l'Excel ha problemi, mostra la tabella per non rompere l'app
                         st.info("Impossibile caricare l'elenco ufficiale dall'Excel per verificare i mancanti.")
+                        st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                         
                 else:
                     st.warning("Il foglio non è nel formato previsto.")
