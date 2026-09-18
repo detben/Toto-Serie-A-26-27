@@ -208,7 +208,7 @@ if excel_file is not None:
             else:
                 st.info("Dati sui pronostici non disponibili.")
 
-# ---------------------------------------------
+    # ---------------------------------------------
     # 5. TABELLE PRONOSTICI (DA GOOGLE SHEETS)
     # ---------------------------------------------
     elif sezione_scelta == "📝 Tabelle Pronostici":
@@ -243,6 +243,17 @@ if excel_file is not None:
                     col_partecipante = df_pron.columns[1]
                     col_jolly = df_pron.columns[-1]
                     
+                    # ==========================================
+                    # NUOVO: SISTEMA ANTIFRODE / INVII MULTIPLI
+                    # ==========================================
+                    conteggi = df_pron[col_partecipante].value_counts()
+                    invii_multipli = conteggi[conteggi > 1]
+                    
+                    if not invii_multipli.empty:
+                        testo_furbetti = "\n".join([f"* **{nome}** ha inviato la schedina **{volte} volte**" for nome, volte in invii_multipli.items()])
+                        st.warning(f"🚨 **ATTENZIONE - INVII MULTIPLI RILEVATI:**\n\n{testo_furbetti}\n\n*Il sistema ha tenuto in considerazione solo l'ultimo invio cronologico per ciascun partecipante.*")
+                    
+                    # Procede con la pulizia standard (tiene solo l'ultimo invio)
                     df_pron = df_pron.drop_duplicates(subset=[col_partecipante], keep='last')
                     df_pron = df_pron.sort_values(by=col_partecipante).reset_index(drop=True)
                     
@@ -273,15 +284,12 @@ if excel_file is not None:
                         mancanti = sorted(list(tutti_i_nomi - nomi_inviati))
                         
                         if mancanti:
-                            # Se manca qualcuno, blocca la tabella e mostra il warning
                             testo_mancanti = "\n".join([f"* {nome}" for nome in mancanti])
                             st.warning(f"🔒 **Tabellone bloccato.** Le giocate saranno visibili solo quando tutti avranno inviato la colonna.\n\nAll'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
                         else:
-                            # Se non manca nessuno, mostra successo e sblocca la tabella
-                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata!")
+                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! 🎉")
                             st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                     else:
-                        # Sistema di sicurezza: se per caso l'Excel ha problemi, mostra la tabella per non rompere l'app
                         st.info("Impossibile caricare l'elenco ufficiale dall'Excel per verificare i mancanti.")
                         st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                         
@@ -291,6 +299,3 @@ if excel_file is not None:
                 st.info("Il tabellone relativo a questa giornata non è ancora disponibile.")
         else:
             st.error("Impossibile caricare i dati dei pronostici da Google Sheets.")
-
-else:
-    st.error("Errore nel caricamento del file master Excel.")
