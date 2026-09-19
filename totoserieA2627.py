@@ -338,14 +338,6 @@ if excel_file is not None:
         colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
         
         # Legge i dati dal foglio "Punteggi"
-        df_punteggi = leggi_sezione_classifica(
-            excel_file, 
-            "Punteggi", 
-            riga_inizio=4,         
-            num_righe=67, 
-            colonne=colonne_punteggi
-        )
-        
         if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
             try:
                 nuove_colonne = []
@@ -353,34 +345,50 @@ if excel_file is not None:
                     val_intestazione = str(col).split('.')[0].strip()
                     val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
                     
-                    # 1. Colonna Nomi
                     if i == 0:
                         nuovo_nome = "Partecipanti"
-                        
-                    # 2. Ultime 3 Colonne unite in Excel (Totale, Ris. Esatti, Pronostici)
                     elif i >= 11: 
                         nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
-                        
-                    # 3. Colonne Partite (es. "Monza - Sassuolo [2-1]" o "Partita 41 [\]")
                     else:
                         nuovo_nome = f"{val_riga_0} [{val_intestazione}]"
                     
-                    # Trucco anti-crash per gli spazi invisibili
                     while nuovo_nome in nuove_colonne:
                         nuovo_nome += " "
                     nuove_colonne.append(nuovo_nome)
                     
-                # Applica le nuove intestazioni
                 df_punteggi.columns = nuove_colonne
-                
-                # Elimina la prima riga (le intestazioni vecchie) per pulire la tabella
                 df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
                 
-                # TRUCCO SALVAVITA: Forza tutti i dati a testo puro e trasforma i vuoti in "0".
-                # Questo impedisce a Streamlit di crashare quando incontra numeri e stringhe miste.
-                df_punteggi = df_punteggi.astype(str).replace(["nan", "NaN", "None", ""], "0")
+                # ---------------------------------------------------------
+                # 1. TRUCCO DECIMALI: Trasforma in testo e taglia via i ".0"
+                # ---------------------------------------------------------
+                df_punteggi = (
+                    df_punteggi.astype(str)
+                    .replace({r'\.0$': ''}, regex=True) # Elimina i decimali inutili (es. 4.0 diventa 4)
+                    .replace(["nan", "NaN", "None", ""], "0")
+                )
 
-                st.dataframe(df_punteggi, hide_index=True, use_container_width=True)
+                # ---------------------------------------------------------
+                # 2. LOGICA COLORI: Verde chiaro (1) e Verde scuro (3)
+                # ---------------------------------------------------------
+                def colora_punti_partite(row):
+                    styles = [''] * len(row)
+                    for i, col in enumerate(row.index):
+                        # Applica la regola solo tra la colonna 1 e la 10 (le partite)
+                        if 1 <= i <= 10:
+                            valore = str(row[col]).strip()
+                            if valore == "1":
+                                # Verde chiaro per 1 punto
+                                styles[i] = 'background-color: #b2df8a; color: black; font-weight: bold;'
+                            elif valore == "3":
+                                # Verde scuro per 3 punti
+                                styles[i] = 'background-color: #33a02c; color: white; font-weight: bold;'
+                    return styles
+
+                # Applica lo stile grafico al DataFrame
+                df_stile = df_punteggi.style.apply(colora_punti_partite, axis=1)
+
+                st.dataframe(df_stile, hide_index=True, use_container_width=True)
                 
             except Exception as e:
                 st.error(f"Errore tecnico durante la visualizzazione: {e}")
