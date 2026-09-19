@@ -121,6 +121,195 @@ excel_file = scarica_file_excel(ONEDRIVE_LINK)
 google_file = scarica_file_google(GOOGLE_LINK)
 
 if excel_file is not None:
+
+    # ---------------------------------------------
+    # 0. AREA PERSONALE (DASHBOARD GIOCATORE)
+    # ---------------------------------------------
+    if sezione_scelta == "👤 Area Personale":
+        st.subheader("👤 La tua Area Personale")
+        st.write("Seleziona il tuo nome per vedere le tue statistiche e giocate in tempo reale.")
+        
+        # 1. Recupera la lista di tutti i giocatori dalla Classifica Generale (Excel)
+        df_nomi = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 67, "I:I")
+        
+        if df_nomi is not None and not df_nomi.empty:
+            lista_giocatori = sorted(df_nomi.iloc[:, 0].dropna().astype(str).str.strip().tolist())
+            
+            giocatore_scelto = st.selectbox("🔍 Cerca il tuo nome:", ["-- Seleziona --"] + lista_giocatori)
+            
+            if giocatore_scelto != "-- Seleziona --":
+                st.divider()
+                st.markdown(f"### Ciao, {giocatore_scelto}! 👋")
+                
+                # Inizializza le variabili
+                pos_gen, pos_trim, pos_giorn = "-", "-", "-"
+                punti_totali = "-"
+                
+                # --- A1. POSIZIONE GENERALE ---
+                df_gen = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 67, "H:L")
+                if df_gen is not None and not df_gen.empty:
+                    df_gen.columns = [str(c).split('.')[0].strip() for c in df_gen.columns]
+                    col_nome = df_gen.columns[1] 
+                    df_gen[col_nome] = df_gen[col_nome].astype(str).str.strip()
+                    dati_gen = df_gen[df_gen[col_nome] == giocatore_scelto]
+                    if not dati_gen.empty:
+                        pos_gen = str(dati_gen.iloc[0, 0]).replace(".0", "")
+                        punti_totali = str(dati_gen.iloc[0, 2]).replace(".0", "")
+
+                # --- A2. POSIZIONE INTERMEDIA (Trimestrale Dinamica) ---
+                if GIORNATA_CORRENTE <= 14:
+                    col_trim, nome_trim = "H:L", "1° Trimestre"
+                elif GIORNATA_CORRENTE <= 26:
+                    col_trim, nome_trim = "X:AB", "2° Trimestre"
+                else:
+                    col_trim, nome_trim = "AN:AR", "3° Trimestre"
+                    
+                df_trim = leggi_sezione_classifica(excel_file, "Classifiche trimestrali", 6, 67, col_trim)
+                if df_trim is not None and not df_trim.empty:
+                    df_trim.columns = [str(c).split('.')[0].strip() for c in df_trim.columns]
+                    col_nome_trim = df_trim.columns[1]
+                    df_trim[col_nome_trim] = df_trim[col_nome_trim].astype(str).str.strip()
+                    dati_trim = df_trim[df_trim[col_nome_trim] == giocatore_scelto]
+                    if not dati_trim.empty:
+                        pos_trim = str(dati_trim.iloc[0, 0]).replace(".0", "")
+
+                # --- A3. POSIZIONE DI GIORNATA ---
+                col_partenza_giorn = 2 + ((GIORNATA_CORRENTE - 1) * 15)
+                colonne_giorn = [col_partenza_giorn, col_partenza_giorn + 1, col_partenza_giorn + 2, col_partenza_giorn + 3]
+                df_giorn = leggi_sezione_classifica(excel_file, "Classifiche giornata", 6, 67, colonne_giorn)
+                if df_giorn is not None and not df_giorn.empty:
+                    df_giorn.columns = [str(c).split('.')[0].strip() for c in df_giorn.columns]
+                    col_nome_giorn = df_giorn.columns[1]
+                    df_giorn[col_nome_giorn] = df_giorn[col_nome_giorn].astype(str).str.strip()
+                    dati_giorn = df_giorn[df_giorn[col_nome_giorn] == giocatore_scelto]
+                    if not dati_giorn.empty:
+                        pos_giorn = str(dati_giorn.iloc[0, 0]).replace(".0", "")
+
+                # Stampa le Metriche in riga
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric("🥇 Pos. Generale", f"{pos_gen}°")
+                col2.metric(f"📊 Pos. Intermedia ({nome_trim})", f"{pos_trim}°")
+                col3.metric(f"🗓️ Pos. Giornata {GIORNATA_CORRENTE}", f"{pos_giorn}°")
+                col4.metric("⭐ Punti Totali", punti_totali)
+                
+                st.divider()
+
+                # --- B. LE GIOCATE EFFETTUATE (Da GOOGLE SHEETS) ---
+                st.markdown(f"#### 📝 Le tue Giocate (Giornata {GIORNATA_CORRENTE})")
+                
+                if google_file is not None:
+                    nome_foglio_pronostici = f"Giornata {GIORNATA_CORRENTE}"
+                    try:
+                        google_file.seek(0)
+                        df_pron = pd.read_excel(google_file, sheet_name=nome_foglio_pronostici)
+                        foglio_esiste = True
+                    except ValueError:
+                        foglio_esiste = False
+                        
+                    if foglio_esiste and not df_pron.empty:
+                        df_pron = df_pron.dropna(how='all').dropna(how='all', axis=1)
+                        df_pron.columns = [str(c).split('.')[0].strip() for c in df_pron.columns]
+                        
+                        if len(df_pron.columns) >= 3:
+                            col_partecipante = df_pron.columns[1]
+                            col_jolly = df_pron.columns[-1]
+                            
+                            # Filtra i duplicati e prepara il nome
+                            df_pron = df_pron.drop_duplicates(subset=[col_partecipante], keep='last')
+                            df_pron[col_partecipante] = df_pron[col_partecipante].astype(str).str.strip()
+                            
+                            # Isola il giocatore scelto
+                            dati_pron = df_pron[df_pron[col_partecipante] == giocatore_scelto]
+                            
+                            if not dati_pron.empty:
+                                partita_scelta = str(dati_pron.iloc[0][col_jolly]).strip().lower()
+                                
+                                # Esclude Timestamp e Jolly dalla vista
+                                colonne_da_mostrare = list(df_pron.columns)[1:-1]
+                                df_vista = dati_pron[colonne_da_mostrare].copy()
+                                
+                                # Applica il colore rosso al Jolly
+                                def colora_partita_jolly(row):
+                                    styles = [''] * len(row)
+                                    for i, col in enumerate(row.index):
+                                        if str(col).strip().lower() == partita_scelta:
+                                            styles[i] = 'background-color: #ff4b4b; color: white; font-weight: bold;'
+                                    return styles
+                                
+                                st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
+                            else:
+                                st.info("Non hai ancora inviato i pronostici per questa giornata.")
+                        else:
+                            st.warning("Il foglio pronostici non è nel formato previsto.")
+                    else:
+                        st.info(f"Il tabellone pronostici relativo alla Giornata {GIORNATA_CORRENTE} non è ancora disponibile.")
+                else:
+                    st.error("Impossibile caricare i dati dei pronostici da Google Sheets.")
+
+                # --- C. DETTAGLIO PUNTEGGI (Da Excel) ---
+                st.markdown(f"#### 🔢 Dettaglio Punteggi (Giornata {GIORNATA_CORRENTE})")
+                
+                col_partenza_punteggi = 1 + ((GIORNATA_CORRENTE - 1) * 15)
+                colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
+                
+                df_punteggi = leggi_sezione_classifica(
+                    excel_file, 
+                    "Punteggi", 
+                    riga_inizio=4,         
+                    num_righe=67, 
+                    colonne=colonne_punteggi
+                )
+                
+                if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
+                    nuove_colonne = []
+                    for i, col in enumerate(df_punteggi.columns):
+                        val_intestazione = str(col).split('.')[0].strip()
+                        val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
+                        
+                        if i == 0:
+                            nuovo_nome = "Partecipanti"
+                        elif i >= 11: 
+                            nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
+                        else:
+                            nuovo_nome = f"{val_riga_0} [{val_intestazione}]"
+                        
+                        while nuovo_nome in nuove_colonne:
+                            nuovo_nome += " "
+                        nuove_colonne.append(nuovo_nome)
+                        
+                    df_punteggi.columns = nuove_colonne
+                    df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
+                    
+                    df_punteggi["Partecipanti"] = df_punteggi["Partecipanti"].astype(str).str.strip()
+                    dati_giornata = df_punteggi[df_punteggi["Partecipanti"] == giocatore_scelto]
+                    
+                    if not dati_giornata.empty:
+                        dati_giornata = (
+                            dati_giornata.astype(str)
+                            .replace({r'\.0$': ''}, regex=True)
+                            .replace(["nan", "NaN", "None", ""], "0")
+                        )
+                        
+                        # Colora i punteggi (1 verde chiaro, 3 verde scuro)
+                        def colora_punti_partite(row):
+                            styles = [''] * len(row)
+                            for i, col in enumerate(row.index):
+                                if 1 <= i <= 10:
+                                    valore = str(row[col]).strip()
+                                    if valore == "1":
+                                        styles[i] = 'background-color: #b2df8a; color: black; font-weight: bold;'
+                                    elif valore == "3":
+                                        styles[i] = 'background-color: #33a02c; color: white; font-weight: bold;'
+                            return styles
+
+                        df_stile_giornata = dati_giornata.style.apply(colora_punti_partite, axis=1)
+                        st.dataframe(df_stile_giornata, hide_index=True, use_container_width=True)
+                    else:
+                        st.info("I tuoi punteggi per la giornata corrente non sono ancora disponibili.")
+                else:
+                    st.info("La tabella punteggi della giornata corrente è in fase di aggiornamento.")
+        else:
+            st.error("Impossibile caricare l'elenco dei giocatori.")
     
     # ---------------------------------------------
     # 1. CLASSIFICA GENERALE (Da OneDrive)
