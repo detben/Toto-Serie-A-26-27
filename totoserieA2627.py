@@ -334,73 +334,73 @@ if excel_file is not None:
         )
         
         numero_giornata_punteggi = int(giornata_scelta_punteggi.split()[1])
-        col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
-        colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
         
         # =========================================================
-        # QUESTA È LA RIGA CHE MANCAVA: Estrae i dati dall'Excel
+        # BLOCCO LOGICO: CONTROLLO GIORNATE FUTURE
         # =========================================================
-        df_punteggi = leggi_sezione_classifica(
-            excel_file, 
-            "Punteggi", 
-            riga_inizio=4,         
-            num_righe=66, 
-            colonne=colonne_punteggi
-        )
-        
-        if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
-            try:
-                nuove_colonne = []
-                for i, col in enumerate(df_punteggi.columns):
-                    val_intestazione = str(col).split('.')[0].strip()
-                    val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
-                    
-                    if i == 0:
-                        nuovo_nome = "Partecipanti"
-                    elif i >= 11: 
-                        nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
-                    else:
-                        nuovo_nome = f"{val_riga_0} [{val_intestazione}]"
-                    
-                    while nuovo_nome in nuove_colonne:
-                        nuovo_nome += " "
-                    nuove_colonne.append(nuovo_nome)
-                    
-                df_punteggi.columns = nuove_colonne
-                df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
-                
-                # ---------------------------------------------------------
-                # 1. TRUCCO DECIMALI: Trasforma in testo e taglia via i ".0"
-                # ---------------------------------------------------------
-                df_punteggi = (
-                    df_punteggi.astype(str)
-                    .replace({r'\.0$': ''}, regex=True) # Elimina i decimali inutili
-                    .replace(["nan", "NaN", "None", ""], "0")
-                )
-
-                # ---------------------------------------------------------
-                # 2. LOGICA COLORI: Verde chiaro (1) e Verde scuro (3)
-                # ---------------------------------------------------------
-                def colora_punti_partite(row):
-                    styles = [''] * len(row)
-                    for i, col in enumerate(row.index):
-                        # Applica la regola solo tra la colonna 1 e la 10 (le partite)
-                        if 1 <= i <= 10:
-                            valore = str(row[col]).strip()
-                            if valore == "1":
-                                styles[i] = 'background-color: #b2df8a; color: black; font-weight: bold;'
-                            elif valore == "3":
-                                styles[i] = 'background-color: #33a02c; color: white; font-weight: bold;'
-                    return styles
-
-                df_stile = df_punteggi.style.apply(colora_punti_partite, axis=1)
-
-                st.dataframe(df_stile, hide_index=True, use_container_width=True)
-                
-            except Exception as e:
-                st.error(f"Errore tecnico durante la visualizzazione: {e}")
+        if numero_giornata_punteggi > GIORNATA_CORRENTE:
+            st.warning(f"⏳ I punteggi per la Giornata {numero_giornata_punteggi} non sono ancora disponibili perché non è ancora stata giocata.")
         else:
-            st.info("La tabella punteggi relativa a questa giornata non è ancora disponibile o è in attesa di dati.")
+            # Se la giornata è uguale o precedente a quella corrente, calcola e mostra la tabella
+            col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
+            colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
+            
+            df_punteggi = leggi_sezione_classifica(
+                excel_file, 
+                "Punteggi", 
+                riga_inizio=4,         
+                num_righe=67, 
+                colonne=colonne_punteggi
+            )
+            
+            if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
+                try:
+                    nuove_colonne = []
+                    for i, col in enumerate(df_punteggi.columns):
+                        val_intestazione = str(col).split('.')[0].strip()
+                        val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
+                        
+                        if i == 0:
+                            nuovo_nome = "Partecipanti"
+                        elif i >= 11: 
+                            nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
+                        else:
+                            nuovo_nome = f"{val_riga_0} [{val_intestazione}]"
+                        
+                        while nuovo_nome in nuove_colonne:
+                            nuovo_nome += " "
+                        nuove_colonne.append(nuovo_nome)
+                        
+                    df_punteggi.columns = nuove_colonne
+                    df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
+                    
+                    # 1. TRUCCO DECIMALI
+                    df_punteggi = (
+                        df_punteggi.astype(str)
+                        .replace({r'\.0$': ''}, regex=True)
+                        .replace(["nan", "NaN", "None", ""], "0")
+                    )
+
+                    # 2. LOGICA COLORI
+                    def colora_punti_partite(row):
+                        styles = [''] * len(row)
+                        for i, col in enumerate(row.index):
+                            if 1 <= i <= 10:
+                                valore = str(row[col]).strip()
+                                if valore == "1":
+                                    styles[i] = 'background-color: #b2df8a; color: black; font-weight: bold;'
+                                elif valore == "3":
+                                    styles[i] = 'background-color: #33a02c; color: white; font-weight: bold;'
+                        return styles
+
+                    df_stile = df_punteggi.style.apply(colora_punti_partite, axis=1)
+
+                    st.dataframe(df_stile, hide_index=True, use_container_width=True)
+                    
+                except Exception as e:
+                    st.error(f"Errore tecnico durante la visualizzazione: {e}")
+            else:
+                st.info("La tabella punteggi relativa a questa giornata non è ancora disponibile o è in attesa di dati.")
         
 
 
