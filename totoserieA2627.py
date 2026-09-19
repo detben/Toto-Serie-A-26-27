@@ -352,7 +352,32 @@ if excel_file is not None:
             colonne=colonne_punteggi
         )
         
-        if df_punteggi is not None and not df_punteggi.empty:
+       if df_punteggi is not None and not df_punteggi.empty:
+            
+            # Combiniamo i nomi delle partite (prima riga) con i risultati (intestazioni originali)
+            nuove_colonne = []
+            for i, col in enumerate(df_punteggi.columns):
+                risultato = str(col).split('.')[0].strip()
+                partita = str(df_punteggi.iloc[0, i]).strip()
+                
+                if i == 0:
+                    # La prima colonna contiene i nomi dei giocatori
+                    nuovo_nome = "Partecipanti"
+                else:
+                    # Crea il nuovo nome combinato: es. "Monza - Napoli [2-1]"
+                    nuovo_nome = f"{partita} [{risultato}]"
+                
+                # Trucco anti-crash per gli spazi invisibili in caso di partite omesse/doppie
+                while nuovo_nome in nuove_colonne:
+                    nuovo_nome += " "
+                nuove_colonne.append(nuovo_nome)
+                
+            # Applica le nuove intestazioni larghe
+            df_punteggi.columns = nuove_colonne
+            
+            # Elimina la prima riga (che ora è diventata l'intestazione) per pulire la tabella
+            df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
+
             st.dataframe(df_punteggi, hide_index=True, use_container_width=True)
         else:
             st.info("La tabella punteggi relativa a questa giornata non è ancora disponibile.")
