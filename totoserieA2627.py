@@ -337,7 +337,17 @@ if excel_file is not None:
         col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
         colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
         
-        # Legge i dati dal foglio "Punteggi"
+        # =========================================================
+        # QUESTA È LA RIGA CHE MANCAVA: Estrae i dati dall'Excel
+        # =========================================================
+        df_punteggi = leggi_sezione_classifica(
+            excel_file, 
+            "Punteggi", 
+            riga_inizio=4,         
+            num_righe=67, 
+            colonne=colonne_punteggi
+        )
+        
         if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
             try:
                 nuove_colonne = []
@@ -364,7 +374,7 @@ if excel_file is not None:
                 # ---------------------------------------------------------
                 df_punteggi = (
                     df_punteggi.astype(str)
-                    .replace({r'\.0$': ''}, regex=True) # Elimina i decimali inutili (es. 4.0 diventa 4)
+                    .replace({r'\.0$': ''}, regex=True) # Elimina i decimali inutili
                     .replace(["nan", "NaN", "None", ""], "0")
                 )
 
@@ -378,14 +388,11 @@ if excel_file is not None:
                         if 1 <= i <= 10:
                             valore = str(row[col]).strip()
                             if valore == "1":
-                                # Verde chiaro per 1 punto
                                 styles[i] = 'background-color: #b2df8a; color: black; font-weight: bold;'
                             elif valore == "3":
-                                # Verde scuro per 3 punti
                                 styles[i] = 'background-color: #33a02c; color: white; font-weight: bold;'
                     return styles
 
-                # Applica lo stile grafico al DataFrame
                 df_stile = df_punteggi.style.apply(colora_punti_partite, axis=1)
 
                 st.dataframe(df_stile, hide_index=True, use_container_width=True)
