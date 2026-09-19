@@ -338,7 +338,7 @@ if excel_file is not None:
         # LOGICA DI SCORRIMENTO ORIZZONTALE:
         # Colonna B corrisponde all'indice 1.
         # Larghezza tabella 14 colonne + Spazio 1 colonna = Salto di 15 colonne
-        col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
+        col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 4) * 15)
         
         # Genera automaticamente la lista delle 14 colonne da leggere
         colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
