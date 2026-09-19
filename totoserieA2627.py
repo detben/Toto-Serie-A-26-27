@@ -130,7 +130,7 @@ if excel_file is not None:
         st.write("Seleziona il tuo nome per vedere le tue statistiche e giocate in tempo reale.")
         
         # 1. Recupera la lista di tutti i giocatori dalla Classifica Generale (Excel)
-        df_nomi = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 67, "I:I")
+        df_nomi = leggi_sezione_classifica(excel_file, "Classifica generale", 6, 65, "I:I")
         
         if df_nomi is not None and not df_nomi.empty:
             lista_giocatori = sorted(df_nomi.iloc[:, 0].dropna().astype(str).str.strip().tolist())
@@ -209,6 +209,9 @@ if excel_file is not None:
                     if foglio_esiste and not df_pron.empty:
                         df_pron = df_pron.dropna(how='all').dropna(how='all', axis=1)
                         df_pron.columns = [str(c).split('.')[0].strip() for c in df_pron.columns]
+                        
+                        # Rinomina l'intestazione chilometrica in "Partecipante"
+                        df_pron = df_pron.rename(columns=lambda x: "Partecipante" if "selezionare il proprio nome" in str(x).lower() else x)
                         
                         if len(df_pron.columns) >= 3:
                             col_partecipante = df_pron.columns[1]
