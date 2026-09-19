@@ -67,7 +67,9 @@ def scarica_file_google(link):
         return None
 
 def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, colonne):
-    """Legge un pezzo specifico di un foglio Excel e ne pulisce le intestazioni."""
+    """
+    Legge un pezzo specifico di un foglio Excel e ne pulisce le intestazioni.
+    """
     try:
         excel_bytes.seek(0) # Riporta il cursore a zero
         df = pd.read_excel(
@@ -78,7 +80,17 @@ def leggi_sezione_classifica(excel_bytes, nome_foglio, riga_inizio, num_righe, c
             usecols=colonne
         )
         df = df.dropna(how='all')
-        df.columns = [str(col).split('.')[0].strip() for col in df.columns]
+        
+        # TRUCCO ANTICRASH: Taglia i numeretti (.1, .2) ma aggiunge uno spazio invisibile
+        # se il nome esiste già, così Streamlit non va in errore per i doppioni.
+        nuove_colonne = []
+        for col in df.columns:
+            nome_pulito = str(col).split('.')[0].strip()
+            while nome_pulito in nuove_colonne:
+                nome_pulito += " " # Aggiunge spazio invisibile
+            nuove_colonne.append(nome_pulito)
+            
+        df.columns = nuove_colonne
         return df
     except Exception as e:
         return None
