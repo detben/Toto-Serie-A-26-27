@@ -270,7 +270,7 @@ if excel_file is not None:
                         val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
                         
                         if i == 0:
-                            nuovo_nome = "Partecipanti"
+                            nuovo_nome = "Partecipante"
                         elif i >= 11: 
                             nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
                         else:
