@@ -344,7 +344,7 @@ if excel_file is not None:
             excel_file, 
             "Punteggi", 
             riga_inizio=4,         
-            num_righe=67, 
+            num_righe=66, 
             colonne=colonne_punteggi
         )
         
