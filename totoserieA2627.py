@@ -300,7 +300,7 @@ if excel_file is not None:
                             testo_mancanti = "\n".join([f"* {nome}" for nome in mancanti])
                             st.warning(f"🔒 **Tabellone bloccato.** Le giocate saranno visibili solo quando tutti avranno inviato la colonna.\n\nAll'appello mancano ancora **{len(mancanti)}** partecipanti:\n\n{testo_mancanti}")
                         else:
-                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! 🎉")
+                            st.success("Tutti i partecipanti hanno inviato la colonna per questa giornata! ")
                             st.dataframe(df_vista.style.apply(colora_partita_jolly, axis=1), hide_index=True, use_container_width=True)
                     else:
                         st.info("Impossibile caricare l'elenco ufficiale dall'Excel per verificare i mancanti.")
@@ -334,23 +334,58 @@ if excel_file is not None:
         )
         
         numero_giornata_punteggi = int(giornata_scelta_punteggi.split()[1])
-        
-        # LOGICA DI SCORRIMENTO ORIZZONTALE:
-        # Colonna B corrisponde all'indice 1.
-        # Larghezza tabella 14 colonne + Spazio 1 colonna = Salto di 15 colonne
         col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
-        
-        # Genera automaticamente la lista delle 14 colonne da leggere
-        colonne_punteggi = [col_partenza_punteggi + i for i in range(11)]
+        colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
         
         # Legge i dati dal foglio "Punteggi"
         df_punteggi = leggi_sezione_classifica(
             excel_file, 
             "Punteggi", 
             riga_inizio=4,         
-            num_righe=66, # Dalla riga 4 alla 70 sono 66 righe di partecipanti
+            num_righe=67, 
             colonne=colonne_punteggi
         )
+        
+        if df_punteggi is not None and not df_punteggi.empty and len(df_punteggi) > 1:
+            try:
+                nuove_colonne = []
+                for i, col in enumerate(df_punteggi.columns):
+                    val_intestazione = str(col).split('.')[0].strip()
+                    val_riga_0 = str(df_punteggi.iloc[0, i]).strip()
+                    
+                    # 1. Colonna Nomi
+                    if i == 0:
+                        nuovo_nome = "Partecipanti"
+                        
+                    # 2. Ultime 3 Colonne unite in Excel (Totale, Ris. Esatti, Pronostici)
+                    elif i >= 11: 
+                        nuovo_nome = val_intestazione if val_intestazione.upper() not in ["NAN", ""] else f"Col_Speciale_{i}"
+                        
+                    # 3. Colonne Partite (es. "Monza - Sassuolo [2-1]" o "Partita 41 [\]")
+                    else:
+                        nuovo_nome = f"{val_riga_0} [{val_intestazione}]"
+                    
+                    # Trucco anti-crash per gli spazi invisibili
+                    while nuovo_nome in nuove_colonne:
+                        nuovo_nome += " "
+                    nuove_colonne.append(nuovo_nome)
+                    
+                # Applica le nuove intestazioni
+                df_punteggi.columns = nuove_colonne
+                
+                # Elimina la prima riga (le intestazioni vecchie) per pulire la tabella
+                df_punteggi = df_punteggi.iloc[1:].reset_index(drop=True)
+                
+                # TRUCCO SALVAVITA: Forza tutti i dati a testo puro e trasforma i vuoti in "0".
+                # Questo impedisce a Streamlit di crashare quando incontra numeri e stringhe miste.
+                df_punteggi = df_punteggi.astype(str).replace(["nan", "NaN", "None", ""], "0")
+
+                st.dataframe(df_punteggi, hide_index=True, use_container_width=True)
+                
+            except Exception as e:
+                st.error(f"Errore tecnico durante la visualizzazione: {e}")
+        else:
+            st.info("La tabella punteggi relativa a questa giornata non è ancora disponibile o è in attesa di dati.")
         
 
 
