@@ -89,7 +89,8 @@ with st.sidebar:
     sezione_scelta = st.radio(
         "Vai a:", 
         [
-            "📝 Tabelle Pronostici", 
+            "📝 Tabelle Pronostici",
+            "🔢 Tabelle Punteggi",
             "🗓️ Classifiche di Giornata", 
             "📊 Classifiche Trimestrali", 
             "🥇 Classifica Generale",
@@ -299,3 +300,47 @@ if excel_file is not None:
                 st.info("Il tabellone relativo a questa giornata non è ancora disponibile.")
         else:
             st.error("Impossibile caricare i dati dei pronostici da Google Sheets.")
+
+    # ---------------------------------------------
+    # 6. TABELLE PUNTEGGI
+    # ---------------------------------------------
+    elif sezione_scelta == "🔢 Tabelle Punteggi":
+        st.subheader("🔢 Tabelle Punteggi")
+        st.write("Scegli la giornata da visualizzare:")
+        
+        # Genera la lista delle giornate dalla 3 alla 38
+        lista_giornate_punteggi = [f"Giornata {i}" for i in range(3, 39)]
+        
+        # Mantiene in memoria la giornata corrente partendo dalla 3
+        indice_default_punteggi = GIORNATA_CORRENTE - 3 if GIORNATA_CORRENTE >= 3 else 0
+        
+        giornata_scelta_punteggi = st.selectbox(
+            "Seleziona Giornata", 
+            lista_giornate_punteggi, 
+            index=indice_default_punteggi, 
+            key="memoria_giornata_punteggi"
+        )
+        
+        numero_giornata_punteggi = int(giornata_scelta_punteggi.split()[1])
+        
+        # LOGICA DI SCORRIMENTO ORIZZONTALE:
+        # Colonna B corrisponde all'indice 1.
+        # Larghezza tabella 14 colonne + Spazio 1 colonna = Salto di 15 colonne
+        col_partenza_punteggi = 1 + ((numero_giornata_punteggi - 1) * 15)
+        
+        # Genera automaticamente la lista delle 14 colonne da leggere
+        colonne_punteggi = [col_partenza_punteggi + i for i in range(14)]
+        
+        # Legge i dati dal foglio "Punteggi"
+        df_punteggi = leggi_sezione_classifica(
+            excel_file, 
+            "Punteggi", 
+            riga_inizio=4,         
+            num_righe=66, # Dalla riga 4 alla 70 sono 66 righe di partecipanti
+            colonne=colonne_punteggi
+        )
+        
+        if df_punteggi is not None and not df_punteggi.empty:
+            st.dataframe(df_punteggi, hide_index=True, use_container_width=True)
+        else:
+            st.info("La tabella punteggi relativa a questa giornata non è ancora disponibile.")
